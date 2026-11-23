@@ -723,9 +723,8 @@ parse_command_line(int argc, const char *const *argv, pack_opt_t *options)
                 break;
 
             case 'S': {
-                char strategy[MAX_NC_NAME];
+                const char *strategy = H5_optarg;
 
-                strcpy(strategy, H5_optarg);
                 if (!strcmp(strategy, "FSM_AGGR"))
                     options->fs_strategy = H5F_FSPACE_STRATEGY_FSM_AGGR;
                 else if (!strcmp(strategy, "PAGE"))
