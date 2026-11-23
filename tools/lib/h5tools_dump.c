@@ -3683,7 +3683,7 @@ h5tools_dump_dcpl(FILE *stream, const h5tool_format_t *info, h5tools_context_t *
 
                             h5tools_str_reset(&buffer);
                             h5tools_str_append(&buffer, "%s %s ", "PARAMS", BEGIN);
-                            for (j = 0; j < cd_nelmts; j++)
+                            for (j = 0; j < cd_nelmts && j < NELMTS(cd_values); j++)
                                 h5tools_str_append(&buffer, "%d ", cd_values[j]);
                             h5tools_str_append(&buffer, "%s", END);
                             h5tools_render_element(stream, info, ctx, &buffer, &curr_pos, (size_t)ncols,

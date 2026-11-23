@@ -3426,6 +3426,7 @@ check_filters(hid_t dcpl)
     if (nfilt <= 0)
         return;
     for (i = 0; i < nfilt; i++) {
+        cd_nelmts = NELMTS(cd_values);
         filter = H5Pget_filter2(dcpl, (unsigned)i, &flags, (size_t *)&cd_nelmts, cd_values, (size_t)120,
                                 namebuf, NULL);
         if (filter == H5Z_FILTER_DEFLATE) {

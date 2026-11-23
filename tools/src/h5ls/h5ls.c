@@ -2108,7 +2108,7 @@ dataset_list2(hid_t dset, const char H5_ATTR_UNUSED *name)
                 snprintf(s, sizeof(s), "Filter-%d:", i);
                 h5tools_str_append(&buffer, "    %-10s %s-%u %s {", s, (f_name[0] ? f_name : "method"),
                                    (unsigned)filt_id, ((filt_flags & H5Z_FLAG_OPTIONAL) ? "OPT" : ""));
-                for (cd_num = 0; cd_num < cd_nelmts; cd_num++)
+                for (cd_num = 0; cd_num < cd_nelmts && cd_num < NELMTS(cd_values); cd_num++)
                     h5tools_str_append(&buffer, "%s%u", (cd_num ? ", " : ""), cd_values[cd_num]);
                 h5tools_str_append(&buffer, "}\n");
             } /* end for */
