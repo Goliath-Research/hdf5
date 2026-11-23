@@ -103,6 +103,10 @@ We would like to thank the many HDF5 community members who contributed to this r
 
 ## Tools
 
+### Fixed buffer overflows from overlong command-line names in h5import and h5repack
+
+   h5import copied input and configuration file names into fixed 255-byte fields with no length check, so a name of 255 bytes or more overwrote the rest of its options record. Such names are now rejected before any file is opened. h5import also now rejects dataset paths with more than 20 groups, which previously overflowed the group array, and the `h5repack -S` argument is no longer copied into a fixed-size buffer.
+
 ## Performance
 
 ## Fortran API
