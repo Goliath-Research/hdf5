@@ -100,6 +100,42 @@ if (BUILD_SHARED_LIBS)
   )
 endif ()
 
+# Heap guard for the filter-count overflow spec. Always a shared object so the
+# driver can load it with LD_PRELOAD ahead of h5repack.
+add_library (h5repack_filter_overflow_guard SHARED h5repack_filter_overflow_guard.c)
+target_include_directories (h5repack_filter_overflow_guard
+    PRIVATE "${HDF5_TOOLS_SRC_H5REPACK_SOURCE_DIR};${HDF5_TOOLS_ROOT_DIR}/lib;${HDF5_SRC_INCLUDE_DIRS};${HDF5_SRC_BINARY_DIR}"
+)
+target_link_libraries (h5repack_filter_overflow_guard PRIVATE ${CMAKE_DL_LIBS})
+set_target_properties (h5repack_filter_overflow_guard PROPERTIES FOLDER tools)
+
+add_executable (h5repack_filter_overflow h5repack_filter_overflow.c)
+target_include_directories (h5repack_filter_overflow
+    PRIVATE "${HDF5_TOOLS_SRC_H5REPACK_SOURCE_DIR};${HDF5_TOOLS_ROOT_DIR}/lib;${HDF5_SRC_INCLUDE_DIRS};${HDF5_SRC_BINARY_DIR}"
+)
+if (BUILD_STATIC_LIBS)
+  TARGET_C_PROPERTIES (h5repack_filter_overflow STATIC)
+  target_link_libraries (h5repack_filter_overflow PRIVATE ${HDF5_LIB_TARGET})
+else ()
+  TARGET_C_PROPERTIES (h5repack_filter_overflow SHARED)
+  target_link_libraries (h5repack_filter_overflow PRIVATE ${HDF5_LIBSH_TARGET})
+endif ()
+set_target_properties (h5repack_filter_overflow PROPERTIES FOLDER tools)
+
+if (HDF5_TEST_TOOLS AND HDF5_TEST_SERIAL AND UNIX)
+  add_test (
+      NAME H5REPACK-filter-count-overflow
+      COMMAND "$<TARGET_FILE:h5repack_filter_overflow>"
+              "$<TARGET_FILE:h5repack>"
+              "$<TARGET_FILE:h5repack_filter_overflow_guard>"
+              "${CMAKE_CURRENT_BINARY_DIR}/filter_overflow_work"
+  )
+  set_tests_properties (H5REPACK-filter-count-overflow PROPERTIES
+      WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+      ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0:halt_on_error=1:abort_on_error=1:verify_asan_link_order=0"
+  )
+endif ()
+
 if (HDF5_TEST_TOOLS AND HDF5_TEST_SERIAL)
   include (CMakeTests.cmake)
 endif ()
