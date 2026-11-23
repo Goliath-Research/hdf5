@@ -89,6 +89,8 @@ main(int argc, char *argv[])
     const char *err8  = "Invalid size of data - %s.\n";
     const char *err9  = "Cannot specify more than 30 input files in one call to h5import.\n";
     const char *err10 = "Length of output file name limited to 255 chars.\n";
+    const char *err11 = "Length of input file name limited to %d chars.\n";
+    const char *err12 = "Length of configuration file name limited to %d chars.\n";
 
     h5tools_setprogname(PROGRAMNAME);
     h5tools_setstatus(EXIT_SUCCESS);
@@ -131,7 +133,12 @@ main(int argc, char *argv[])
 
             case 1: /* counting input files */
                 if (opt->fcount < 29) {
-                    (void)strcpy(opt->infiles[opt->fcount].datafile, argv[i]);
+                    if (strlen(argv[i]) >= sizeof(opt->infiles[opt->fcount].datafile)) {
+                        (void)fprintf(rawerrorstream, err11, MAX_PATH_NAME_LENGTH - 1);
+                        goto err;
+                    }
+                    (void)snprintf(opt->infiles[opt->fcount].datafile,
+                                   sizeof(opt->infiles[opt->fcount].datafile), "%s", argv[i]);
                     in                               = &(opt->infiles[opt->fcount].in);
                     opt->infiles[opt->fcount].config = 0;
                     setDefaultValues(in, opt->fcount);
@@ -148,7 +155,12 @@ main(int argc, char *argv[])
                 break;
 
             case 3: /* get configfile name */
-                (void)strcpy(opt->infiles[opt->fcount - 1].configfile, argv[i]);
+                if (strlen(argv[i]) >= sizeof(opt->infiles[opt->fcount - 1].configfile)) {
+                    (void)fprintf(rawerrorstream, err12, MAX_PATH_NAME_LENGTH - 1);
+                    goto err;
+                }
+                (void)snprintf(opt->infiles[opt->fcount - 1].configfile,
+                               sizeof(opt->infiles[opt->fcount - 1].configfile), "%s", argv[i]);
                 opt->infiles[opt->fcount - 1].config = 1;
                 break;
 
