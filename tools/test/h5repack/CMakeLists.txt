@@ -46,6 +46,21 @@ else ()
   target_link_libraries (h5repacktest PRIVATE ${HDF5_TOOLS_LIBSH_TARGET} ${HDF5_TEST_LIBSH_TARGET} h5repackgentest)
 endif ()
 set_target_properties (h5repacktest PROPERTIES FOLDER tools)
+
+# Object-reference repack must reject a dimension whose byte count
+# does not fit in the unsigned size used for the read buffer.
+add_executable (h5repack_ref_overflow ${REPACK_COMMON_SOURCES} ${HDF5_TOOLS_TEST_H5REPACK_SOURCE_DIR}/h5repack_ref_overflow.c)
+target_include_directories (h5repack_ref_overflow
+    PRIVATE "${HDF5_TOOLS_SRC_H5REPACK_SOURCE_DIR};${HDF5_TOOLS_ROOT_DIR}/lib;${HDF5_SRC_INCLUDE_DIRS};${HDF5_SRC_BINARY_DIR};$<$<BOOL:${HDF5_ENABLE_PARALLEL}>:${MPI_C_INCLUDE_DIRS}>"
+)
+if (HDF5_BUILD_STATIC_TOOLS)
+  TARGET_C_PROPERTIES (h5repack_ref_overflow STATIC)
+  target_link_libraries (h5repack_ref_overflow PRIVATE ${HDF5_TOOLS_LIB_TARGET} ${HDF5_LIB_TARGET})
+else ()
+  TARGET_C_PROPERTIES (h5repack_ref_overflow SHARED)
+  target_link_libraries (h5repack_ref_overflow PRIVATE ${HDF5_TOOLS_LIBSH_TARGET} ${HDF5_LIBSH_TARGET})
+endif ()
+set_target_properties (h5repack_ref_overflow PROPERTIES FOLDER tools)
 #-----------------------------------------------------------------------------
 # If plugin library tests can be tested
 #-----------------------------------------------------------------------------

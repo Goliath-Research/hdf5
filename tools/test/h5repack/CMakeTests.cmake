@@ -1874,6 +1874,8 @@ ADD_H5_TEST (tst_onion_dset_1d TEST_TYPE "TEST" RESULT_CODE 0 TEST_FILE tst_onio
 ADD_H5_TEST (tst_onion_dset_ext TEST_TYPE "TEST" RESULT_CODE 0 TEST_FILE tst_onion_dset_ext.h5 --src-vfd-name onion --src-vfd-info 1 DUMP_CHECK DUMP_NO_OPT)
 ADD_H5_TEST (tst_onion_objs TEST_TYPE "TEST" RESULT_CODE 0 TEST_FILE tst_onion_objs.h5 --src-vfd-name onion --src-vfd-info 1 DUMP_CHECK DUMP_NO_OPT)
 
+add_test (NAME h5repack_ref_overflow COMMAND $<TARGET_FILE:h5repack_ref_overflow>)
+
 ##############################################################################
 ###    P L U G I N  T E S T S
 ##############################################################################
