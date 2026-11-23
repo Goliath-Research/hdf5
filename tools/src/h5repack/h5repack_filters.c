@@ -24,51 +24,34 @@
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 /*-------------------------------------------------------------------------
- * Function: aux_copy_obj
+ * Function: aux_check_filters_avail
  *
- * Purpose: copy the object filters for object copy
+ * Purpose: check that every filter in the DCPL pipeline is available
+ *
+ * The pipeline read from a file may hold up to H5Z_MAX_NFILTERS filters,
+ * more than a pack_info_t record can store, so the filters are read
+ * directly from the DCPL instead of being copied into a record.
  *
  * Return: 0 success, -1 failure
  *-------------------------------------------------------------------------
  */
 static int
-aux_copy_obj(hid_t        dcpl_id,        /* dataset creation property list */
-             const char  *name,           /* object name from traverse list */
-             pack_info_t *objout /*OUT*/) /* info about object to filter */
+aux_check_filters_avail(hid_t dcpl_id) /* dataset creation property list */
 {
-    int          nfilters;       /* number of filters in DCPL */
-    char         f_objname[256]; /* filter objname */
-    H5D_layout_t layout;
-    int          rank;       /* rank of dataset */
-    hsize_t      chsize[64]; /* chunk size in elements */
+    int          nfilters; /* number of filters in DCPL */
+    H5Z_filter_t filtn;    /* filter identification number */
     int          i;
-    unsigned     u;
     int          ret_value = 0;
 
-    /* get information about input filters */
     if ((nfilters = H5Pget_nfilters(dcpl_id)) < 0)
         H5TOOLS_GOTO_ERROR((-1), "H5Pget_nfilters failed");
-    /* copy filter_info_t structure */
+
     for (i = 0; i < nfilters; i++) {
-        if ((objout->filter[i].filtn = H5Pget_filter2(
-                 dcpl_id, (unsigned)i, &objout->filter[i].filt_flag, &objout->filter[i].cd_nelmts,
-                 objout->filter[i].cd_values, sizeof(f_objname), f_objname, NULL)) < 0)
+        if ((filtn = H5Pget_filter2(dcpl_id, (unsigned)i, NULL, NULL, NULL, 0, NULL, NULL)) < 0)
             H5TOOLS_GOTO_ERROR((-1), "H5Pget_filter2 failed");
-    }
 
-    objout->nfilters = nfilters;
-    strcpy(objout->path, name);
-
-    if ((layout = H5Pget_layout(dcpl_id)) < 0)
-        H5TOOLS_GOTO_ERROR((-1), "H5Pget_layout failed");
-    objout->layout = layout;
-
-    if (layout == H5D_CHUNKED) {
-        if ((rank = H5Pget_chunk(dcpl_id, NELMTS(chsize), chsize /*out*/)) < 0)
-            H5TOOLS_GOTO_ERROR((-1), "H5Pget_chunk failed");
-        objout->chunk.rank = rank;
-        for (u = 0; u < (unsigned)rank; u++)
-            objout->chunk.chunk_lengths[u] = chsize[u];
+        if (H5Zfilter_avail(filtn) <= 0)
+            H5TOOLS_GOTO_ERROR((-1), "%d filter unavailable", filtn);
     }
 
 done:
@@ -245,7 +228,6 @@ apply_filters(const char    *name,    /* object name from traverse list */
     H5D_layout_t layout;
     int          i;
     pack_info_t *obj       = NULL;
-    pack_info_t *filtobj   = NULL;
     int          ret_value = 0;
 
     *has_filter = 0;
@@ -255,15 +237,12 @@ apply_filters(const char    *name,    /* object name from traverse list */
 
     if (NULL == (obj = (pack_info_t *)calloc(1, sizeof(pack_info_t))))
         H5TOOLS_GOTO_ERROR((-1), "unable to allocate memory");
-    if (NULL == (filtobj = (pack_info_t *)calloc(1, sizeof(pack_info_t))))
-        H5TOOLS_GOTO_ERROR((-1), "unable to allocate memory");
 
     /*-------------------------------------------------------------------------
      * initialize the assignment object
      *-------------------------------------------------------------------------
      */
     init_packobject(obj);
-    init_packobject(filtobj);
 
     /*-------------------------------------------------------------------------
      * find options
@@ -289,8 +268,8 @@ apply_filters(const char    *name,    /* object name from traverse list */
     }
     else if (nfilters) {
         *has_filter = 1;
-        if (aux_copy_obj(dcpl_id, name, filtobj) < 0)
-            H5TOOLS_GOTO_ERROR((-1), "aux_copy_obj failed");
+        if (aux_check_filters_avail(dcpl_id) < 0)
+            H5TOOLS_GOTO_ERROR((-1), "aux_check_filters_avail failed");
     }
 
     /*-------------------------------------------------------------------------
@@ -463,16 +442,6 @@ apply_filters(const char    *name,    /* object name from traverse list */
     }
     /*obj->nfilters*/
 
-    if (filtobj->nfilters) {
-        for (i = 0; i < filtobj->nfilters; i++) {
-            if (filtobj->filter[i].filtn < 0)
-                H5TOOLS_GOTO_ERROR((-1), "invalid filter");
-
-            if (H5Zfilter_avail(filtobj->filter[i].filtn) <= 0)
-                H5TOOLS_GOTO_ERROR((-1), "%d filter unavailable", filtobj->filter[i].filtn);
-        } /* for */
-    }     /* nfilters */
-
     /*-------------------------------------------------------------------------
      * layout
      *-------------------------------------------------------------------------
@@ -500,6 +469,5 @@ apply_filters(const char    *name,    /* object name from traverse list */
 
 done:
     free(obj);
-    free(filtobj);
     return ret_value;
 }
