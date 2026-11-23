@@ -103,6 +103,12 @@ We would like to thank the many HDF5 community members who contributed to this r
 
 ## Tools
 
+### Fixed a heap buffer overflow in h5repack for datasets with more than six filters
+
+   When h5repack kept the filters already stored on a dataset, it copied every filter into a record that holds only six. A file can store up to 32 filters, so a crafted file could write past the heap allocation. h5repack now checks the stored filters directly from the dataset creation property list, and keeps all of them.
+
+   h5ls -v and h5dump -p no longer read past their buffer when a filter stores more than 256 client data values, and h5dump -x no longer reuses one filter's client data count as the buffer size for the next.
+
 ## Performance
 
 ## Fortran API
