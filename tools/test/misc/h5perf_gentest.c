@@ -63,8 +63,13 @@ main(int argc, char *argv[])
 
     memset(fname, 0, 32);
     for (i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-f") == 0)
-            strcpy(fname, argv[i + 1]);
+        if (strcmp(argv[i], "-f") == 0) {
+            if (i + 1 >= argc || strlen(argv[i + 1]) >= sizeof(fname)) {
+                fprintf(stderr, "-f requires a file name shorter than %zu characters.\n", sizeof(fname));
+                return 1;
+            }
+            snprintf(fname, sizeof(fname), "%s", argv[i + 1]);
+        }
         else if (strcmp(argv[i], "-g") == 0)
             ngrps = atoi(argv[i + 1]);
         else if (strcmp(argv[i], "-d") == 0)
