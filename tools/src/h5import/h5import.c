@@ -2530,8 +2530,11 @@ parsePathInfo(struct path_info *path, char *temp)
     char       *token;
     int         i    = 0;
     const char *err1 = "Path string larger than MAX_PATH_NAME_LENGTH.\n";
+    const char *err2 = "Path has more than %d groups.\n";
 
     token = strtok(temp, delimiter);
+    if (token == NULL)
+        return (-1);
     if (strlen(token) >= MAX_PATH_NAME_LENGTH) {
         (void)fprintf(rawerrorstream, "%s", err1);
         return (-1);
@@ -2542,6 +2545,10 @@ parsePathInfo(struct path_info *path, char *temp)
         token = strtok(NULL, delimiter);
         if (token == NULL)
             break;
+        if (i >= MAX_GROUPS_IN_PATH) {
+            (void)fprintf(rawerrorstream, err2, MAX_GROUPS_IN_PATH);
+            return (-1);
+        }
         if (strlen(token) >= MAX_PATH_NAME_LENGTH) {
             (void)fprintf(rawerrorstream, "%s", err1);
             return (-1);
